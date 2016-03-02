@@ -102,6 +102,12 @@ impl<S: StreamSocket> StreamImpl<S> {
                 };
             }
             match intent.1 {
+                Greedy => {
+                    intent = try!(to_result(intent.0.bytes_read(
+                        &mut self.transport(),
+                        0, scope)));
+                    continue 'outer
+                }
                 Bytes(num) => {
                     loop {
                         if self.inbuf.len() >= num {
