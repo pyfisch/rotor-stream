@@ -102,6 +102,33 @@ impl<S: StreamSocket> StreamImpl<S> {
                 };
             }
             match intent.1 {
+                Greedy => {
+                    loop {
+                        intent = try!(to_result(intent.0.bytes_read(
+                            &mut self.transport(),
+                            0, scope)));
+                        match self.read() {
+                            IoOp::Done => {}
+                            IoOp::NoOp => {
+                                return Ok(Stream::compose(self, intent));
+                            }
+                            IoOp::Eos => {
+                                intent = try!(to_result(intent.0.exception(
+                                    &mut self.transport(),
+                                    Exception::EndOfStream,
+                                    scope)));
+                                continue 'outer;
+                            }
+                            IoOp::Error(e) => {
+                                intent = try!(to_result(intent.0.exception(
+                                    &mut self.transport(),
+                                    Exception::ReadError(e),
+                                    scope)));
+                                continue 'outer;
+                            }
+                        }
+                    }
+                }
                 Bytes(num) => {
                     loop {
                         if self.inbuf.len() >= num {

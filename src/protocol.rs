@@ -53,6 +53,8 @@ quick_error!{
 // without Copy and Clone. Probably we will enable them for the user code later
 #[derive(Debug)]
 pub enum Expectation {
+    /// Wait for the next packet and pass all bytes to `bytes_read()`.
+    Greedy,
     /// Read number of bytes
     ///
     /// The buffer that is passed to bytes_read might contain more bytes, but
